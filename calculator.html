@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Calculator</title>
+		<link rel="stylesheet" href="./js/bootstrap/css/bootstrap.css" />
+		<style>
+			#show {
+				text-align: right;
+			}
+			.container {
+				width: 400px;
+			}
+			.cal {
+				width: 100%;
+			}
+			[class^='col'] {
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container" id="example">
+			<div class="row">
+				<div class="clo-md-12">
+					<div class="panel panel-info">
+						<div class="panel-heading">算术型计算器</div>
+						<div class="panel-body" v-text="show" id="show"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row" v-for="row in key">
+				<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" v-for="v in row">
+					<button type="button" class="btn btn-default" :class="calstyle" @click="input">
+						{{ v }}
+					</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<button type="button" class="btn btn-default" :class="calstyle" @click="equal">=</button>
+				</div>
+			</div>
+		</div>
+		<script src="./js/jquery/jquery.js"></script>
+		<script src="./js/bootstrap/js/bootstrap.js"></script>
+		<script src="./js/vue.js"></script>
+		<script name="accEqual">
+			/**
+			 * 加法函数，用来得到精确的加法结果
+			 * @param {Object} arg1
+			 * @param {Object} arg2
+			 */
+			function accAdd(arg1, arg2) {
+				let r1 = deal(arg1)
+				let r2 = deal(arg2)
+				let m = Math.pow(10, Math.max(r1, r2))
+				return (arg1 * m + arg2 * m) / m
+			}
+
+			/**
+			 * 乘法函数，用来得到精确的乘法结果
+			 * @param {Object} arg1
+			 * @param {Object} arg2
+			 */
+			function accMul(arg1, arg2) {
+				let m = 0
+				m += deal(arg1)
+				m += deal(arg2)
+				let r1 = Number(arg1.toString().replace('.', ''))
+				let r2 = Number(arg2.toString().replace('.', ''))
+				return (r1 * r2) / Math.pow(10, m)
+			}
+
+			/**
+			 * 除法函数，用来得到精确的除法结果
+			 * @param {Object} arg1
+			 * @param {Object} arg2
+			 */
+			function accDiv(arg1, arg2) {
+				let t1 = deal(arg1)
+				let t2 = deal(arg2)
+				let r1 = Number(arg1.toString().replace('.', ''))
+				let r2 = Number(arg2.toString().replace('.', ''))
+				return (r1 / r2) * Math.pow(10, t2 - t1)
+			}
+			/**
+			 * 求小数点后的数据长度
+			 */
+			function deal(arg) {
+				let t = 0
+				try {
+					t = arg.toString().split('.')[1].length
+				} catch (e) {}
+				return t
+			}
+		</script>
+		<script>
+			let vm = new Vue({
+				el: '#example',
+				data: {
+					calstyle: 'cal',
+					show: '0',
+					temp: 0,
+					dotStatus: false,
+					enterStatus: false,
+					operator: '',
+					key: [
+						['7', '8', '9', '÷'],
+						['4', '5', '6', '×'],
+						['1', '2', '3', '-'],
+						['clear', '0', '.', '+'],
+					],
+				},
+				methods: {
+					input: function(e) {
+						let patern = e.target.innerText
+						switch (patern) {
+							case '0':
+							case '1':
+							case '2':
+							case '3':
+							case '4':
+							case '5':
+							case '6':
+							case '7':
+							case '8':
+							case '9':
+							case '.':
+								this.inputNum(patern)
+								break
+							case 'clear':
+								this.show = 0
+								this.temp = 0
+								this.dotStatus = false
+								this.enterStatus = false
+								this.operator = ''
+								break
+							case '+':
+							case '-':
+							case '×':
+							case '÷':
+								this.inputOperator(patern)
+								break
+							default:
+								break
+						}
+						return console.log(patern)
+					},
+					inputNum: function(patern) {
+						if (this.enterStatus) {
+							this.show = 0
+							this.enterStatus = false
+							return this.inputNum(patern)
+						}
+						if (patern == '.') {
+							if (this.dotStatus) return
+							else this.dotStatus = true
+						} else if (this.show == '0') return (this.show = patern)
+						this.show += patern
+					},
+					inputOperator: function(patern) {
+						if (this.operator) {
+							this.equal()
+						}
+						this.enterStatus = true
+						this.temp = parseFloat(this.show)
+						this.dotStatus = false
+						this.operator = patern
+					},
+					equal: function() {
+						switch (this.operator) {
+							case '+':
+								this.show = accAdd(this.temp, parseFloat(this.show))
+								break
+							case '-':
+								this.show = this.temp - parseFloat(this.show)
+								break
+							case '×':
+								this.show = accMul(this.temp, parseFloat(this.show))
+								break
+							case '÷':
+								this.show = accDiv(this.temp, parseFloat(this.show))
+								break
+							default:
+								break
+						}
+						this.dotStatus = false
+						this.enterStatus = true
+						this.temp = 0
+						this.operator = ''
+					},
+				},
+			})
+		</script>
+	</body>
+</html>
